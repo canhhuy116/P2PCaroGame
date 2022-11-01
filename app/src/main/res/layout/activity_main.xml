@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
+    <ImageView
+        android:layout_marginTop="100dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/in_app_logo"
+        android:layout_gravity="center"
+
+        ></ImageView>
+    <Button
+        android:id="@+id/play_now"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play Now"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        android:padding="6dp"
+        android:background="#0175FF"
+
+        android:layout_gravity="center"
+        ></Button>
+    <Button
+        android:id="@+id/play_with_friend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play with friend"
+        android:layout_marginTop="40dp"
+        android:textSize="20dp"
+        android:textColor="@color/white"
+        android:background="#0175FF"
+        android:padding="6dp"
+        android:layout_gravity="center"
+        ></Button>
+
+    <LinearLayout
+        android:layout_marginTop="80dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:background="#F3FBFE">
+        <ImageButton
+            android:id="@+id/continue_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/continue_icon"
+            ></ImageButton>
+        <ImageButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/home_active"
+            android:gravity="bottom|center"
+            android:textColor="#44A1FF">
+        </ImageButton>
+        <ImageButton
+            android:id="@+id/setting_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/setting"
+            android:gravity="bottom|center"
+            ></ImageButton>
+    </LinearLayout>
+
+</LinearLayout>
