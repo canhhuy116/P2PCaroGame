@@ -17,9 +17,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
-    private WifiP2pManager manager;
-    private WifiP2pManager.Channel channel;
-    private MainActivity activity;
+    private final WifiP2pManager manager;
+    private final WifiP2pManager.Channel channel;
+    private final MainActivity activity;
 
     public WifiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel, MainActivity activity) {
         this.manager = manager;
@@ -32,7 +32,17 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action))
         {
-
+            int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
+            if(state == WifiP2pManager.WIFI_P2P_STATE_ENABLED)
+            {
+                activity.setIsWifiP2pEnabled(true);
+                Toast.makeText(context, "Wifi is on", Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                activity.setIsWifiP2pEnabled(false);
+                Toast.makeText(context, "Wifi is off", Toast.LENGTH_SHORT).show();
+            }
         }else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action))
         {
             if(manager!=null)
@@ -41,21 +51,20 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             }
         }else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action))
         {
+            if (manager == null) {
+                return;
+            }
 
-            if(manager!=null)
-            {
-                NetworkInfo networkInfo =intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
-                if(networkInfo.isConnected()) {
-                    manager.requestConnectionInfo(channel, activity.connectionInfoListener);
-                }
-
+            NetworkInfo networkInfo = (NetworkInfo) intent
+                    .getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
+            if(networkInfo.isConnected()) {
+                manager.requestConnectionInfo(channel, activity.connectionInfoListener);
             }
         }
+        else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action))
+        {
+            WifiP2pDevice device = (WifiP2pDevice) intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
+            activity.setDeviceName(device.deviceName);
+        }
     }
-
-
-
-
-
-
 }

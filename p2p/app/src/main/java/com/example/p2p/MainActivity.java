@@ -1,20 +1,22 @@
 package com.example.p2p;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,22 +32,22 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
-    EditText edt1;
-    Button bt1, bt2;
-    ListView lv1;
-    WifiP2pManager manager;
-    WifiP2pManager.Channel channel;
-    BroadcastReceiver receiver;
-    IntentFilter intentFilter;
+    EditText InputMsg;
+    Button SendBtn, DiscoveryBtn;
+    ListView DeviceList;
+    private WifiP2pManager manager;
+    boolean isWifiP2pEnabled = false;
+    boolean retryChannel = false;
+    private WifiP2pManager.Channel channel;
+    private BroadcastReceiver receiver = null;
+    private final IntentFilter intentFilter = new IntentFilter();
     List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     String[] deviceNameArray;
     WifiP2pDevice[] deviceArray;
@@ -54,36 +56,47 @@ public class MainActivity extends AppCompatActivity {
     ServerClass serverClass;
     ClientClass clientClass;
 
-    boolean ishost;
+    boolean isHost;
+    String deviceName;
 
-
-
+    public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
+        this.isWifiP2pEnabled = isWifiP2pEnabled;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        khoitao();
+
+        // add necessary intent values to be matched.
+
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+
+        if (!initP2P()) {
+            finish();
+        }
 
 
-        bt2.setOnClickListener(new View.OnClickListener() {
+        DiscoveryBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(MainActivity.this, "connect", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Discovery Initiated", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onFailure(int reason) {
-
-                        Toast.makeText(MainActivity.this, "in_connect", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Discovery Failed : " + reason, Toast.LENGTH_SHORT).show();
                     }
                 });
             }
         });
-        lv1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        DeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final WifiP2pDevice device =deviceArray[position];
@@ -92,31 +105,31 @@ public class MainActivity extends AppCompatActivity {
                 manager.connect(channel, config, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
-                        Toast.makeText(MainActivity.this, "connect-"+ device.deviceAddress, Toast.LENGTH_SHORT).show();
+                        // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
+                        Toast.makeText(MainActivity.this, "Connected to "+device.deviceName, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onFailure(int i) {
-                        Toast.makeText(MainActivity.this, "in-connect 2 ", Toast.LENGTH_SHORT).show();
-                        return ;
+                        Toast.makeText(MainActivity.this, "Connect failed. Retry.", Toast.LENGTH_SHORT).show();
                     }
                 });
 
             }
         });
-       bt1.setOnClickListener(new View.OnClickListener() {
+       SendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
-                String msg = edt1.getText().toString();
+                String msg = InputMsg.getText().toString();
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        if(msg!=null&& ishost)
+                        if(msg!=null&& isHost)
                         {
                             serverClass.write(msg.getBytes());
 
-                        }else if(msg!=null && !ishost)
+                        }else if(msg!=null && !isHost)
                         {
                             clientClass.write(msg.getBytes());
                         }
@@ -134,19 +147,38 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void khoitao() {
-        bt1 = (Button) findViewById(R.id.bt1);
-        bt2 = (Button) findViewById(R.id.bt2);
-        lv1=(ListView) findViewById(R.id.lv1);
-        edt1=(EditText) findViewById(R.id.edt1);
-        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(this, getMainLooper(), null);
-        receiver = new WifiDirectBroadcastReceiver(manager, channel, this);
+    private boolean initP2P() {
+        SendBtn = (Button) findViewById(R.id.bt1);
+        DiscoveryBtn = (Button) findViewById(R.id.bt2);
+        DeviceList =(ListView) findViewById(R.id.lv1);
+        InputMsg =(EditText) findViewById(R.id.edt1);
 
-        intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        // Device capability definition check
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
+            Toast.makeText(this, "Wi-Fi Direct is not supported by this device.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        // Hardware capability check
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null) {
+            Toast.makeText(this, "Cannot get Wi-Fi system service.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        if (manager == null) {
+            Toast.makeText(this, "Cannot get Wi-Fi P2P system service.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        channel = manager.initialize(this, getMainLooper(), null);
+        if (channel == null) {
+            Toast.makeText(this, "Cannot initialize Wi-Fi P2P.", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        return true;
     }
 
     WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
@@ -165,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             ArrayAdapter<String > adapter=new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1,deviceNameArray);
-            lv1.setAdapter(adapter);
+            DeviceList.setAdapter(adapter);
             if(peers.size()==0)
             {
                 Toast.makeText(MainActivity.this, "Empty", Toast.LENGTH_SHORT).show();
@@ -181,13 +213,13 @@ public class MainActivity extends AppCompatActivity {
             if(wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner)
             {
                 Toast.makeText(MainActivity.this, "Connected ", Toast.LENGTH_SHORT).show();
-                ishost=true;
+                isHost =true;
                 serverClass = new ServerClass();
                 serverClass.start();
             }else if(wifiP2pInfo.groupFormed)
             {
                 Toast.makeText(MainActivity.this, "connected ", Toast.LENGTH_SHORT).show();
-                ishost =false;
+                isHost =false;
                 clientClass = new ClientClass(groupOwnerAddress);
                 clientClass.start();
             }
@@ -199,10 +231,11 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
+    /** register the BroadcastReceiver with the intent values to be matched */
     @Override
     protected void onResume() {
         super.onResume();
+        receiver = new WifiDirectBroadcastReceiver(manager, channel, this);
         registerReceiver(receiver,intentFilter);
     }
 
@@ -211,6 +244,10 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(receiver);
 
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
     }
 
     public class  ServerClass extends Thread {
