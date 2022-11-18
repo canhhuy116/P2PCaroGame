@@ -1,38 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
-
-    <Button
-        android:id="@+id/bt1"
-        android:layout_width="wrap_content"
-        android:text="send"
-        android:layout_margin="20dp"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/bt2"
-        android:text="discovery"
-        android:layout_width="wrap_content"
-        android:layout_margin="20dp"
-        android:layout_height="wrap_content" />
-
-    <EditText
-        android:id="@+id/edt1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <LinearLayout
         android:layout_width="match_parent"
-        android:background="@color/teal_200"
-        android:textColor="@color/white"
-        android:layout_margin="20dp"
-        android:layout_height="wrap_content" />
-
-    <ListView
-        android:id="@+id/lv1"
-        android:layout_width="match_parent"
-        android:layout_margin="20dp"
-        android:layout_height="match_parent" />
-
+        android:id="@+id/linearLayout1"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:ignore="UselessParent">
+        <Button
+            android:id="@+id/p2pBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/enable_p2p_button"/>
+        <Button
+            android:id="@+id/discoveryBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/discover_peers_button"/>
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/frag_list"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:name="com.example.p2p.DeviceListFragment"
+            tools:layout="@layout/device_list">
+            <!-- Preview: layout=@layout/row_devices -->
+        </androidx.fragment.app.FragmentContainerView>
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/frag_detail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:name="com.example.p2p.DeviceDetailFragment"
+            tools:layout="@layout/device_detail">
+            <!-- Preview: layout=@layout/device_detail -->
+        </androidx.fragment.app.FragmentContainerView>
+    </LinearLayout>
 </LinearLayout>

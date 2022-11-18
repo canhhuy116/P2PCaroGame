@@ -1,72 +1,127 @@
 package com.example.p2p;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
+import android.net.wifi.p2p.WifiP2pManager.Channel;
+import android.net.wifi.p2p.WifiP2pManager.ChannelListener;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.provider.Settings;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 
-public class MainActivity extends Activity {
+import com.example.p2p.DeviceListFragment.DeviceActionListener;
 
-    EditText InputMsg;
-    Button SendBtn, DiscoveryBtn;
-    ListView DeviceList;
+/**
+ * An activity that uses WiFi Direct APIs to discover and connect with available
+ * devices. WiFi Direct APIs are asynchronous and rely on callback mechanism
+ * using interfaces to notify the application of operation success or failure.
+ * The application should also register a BroadcastReceiver for notification of
+ * WiFi state related events.
+ */
+public class MainActivity extends FragmentActivity implements ChannelListener, DeviceActionListener {
+
+    public static final String TAG = "Group 10";
+
+    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 1001;
+
     private WifiP2pManager manager;
-    boolean isWifiP2pEnabled = false;
-    boolean retryChannel = false;
-    private WifiP2pManager.Channel channel;
-    private BroadcastReceiver receiver = null;
+    private boolean isWifiP2pEnabled = false;
+    private boolean retryChannel = false;
+
     private final IntentFilter intentFilter = new IntentFilter();
-    List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-    String[] deviceNameArray;
-    WifiP2pDevice[] deviceArray;
+    private Channel channel;
+    private BroadcastReceiver receiver = null;
 
-    Socket socket;
-    ServerClass serverClass;
-    ClientClass clientClass;
+    FragmentTransaction fragmentTransaction;
+    DeviceListFragment fragmentList;
+    DeviceDetailFragment fragmentDetails;
 
-    boolean isHost;
-    String deviceName;
-
+    /**
+     * @param isWifiP2pEnabled the isWifiP2pEnabled to set
+     */
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Fine location permission is not granted!");
+                finish();
+            }
+        }
+    }
+
+    private boolean initP2p() {
+        // Device capability definition check
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
+            Log.e(TAG, "Wi-Fi Direct is not supported by this device.");
+            return false;
+        }
+
+        // Hardware capability check
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null) {
+            Log.e(TAG, "Cannot get Wi-Fi system service.");
+            return false;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (!wifiManager.isP2pSupported()) {
+                Log.e(TAG, "Wi-Fi Direct is not supported by the hardware or Wi-Fi is off.");
+                return false;
+            }
+        }
+
+        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        if (manager == null) {
+            Log.e(TAG, "Cannot get Wi-Fi Direct system service.");
+            return false;
+        }
+
+        channel = manager.initialize(this, getMainLooper(), null);
+        if (channel == null) {
+            Log.e(TAG, "Cannot initialize Wi-Fi Direct.");
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Button btnDiscover = findViewById(R.id.discoveryBtn);
+        Button btnP2P = findViewById(R.id.p2pBtn);
+
+        btnDiscover.setOnClickListener(this::clickDiscover);
+
+        btnP2P.setOnClickListener(this::clickP2P);
 
         // add necessary intent values to be matched.
 
@@ -75,299 +130,222 @@ public class MainActivity extends Activity {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        if (!initP2P()) {
+        if (!initP2p()) {
             finish();
         }
 
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentList = DeviceListFragment.newInstance("");
+        fragmentTransaction.replace(R.id.frag_list, fragmentList);
+        fragmentTransaction.commit();
 
-        DiscoveryBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        Toast.makeText(MainActivity.this, "Discovery Initiated", Toast.LENGTH_SHORT).show();
-                    }
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentDetails = DeviceDetailFragment.newInstance("");
+        fragmentTransaction.replace(R.id.frag_detail, fragmentDetails);
+        fragmentTransaction.commit();
 
-                    @Override
-                    public void onFailure(int reason) {
-                        Toast.makeText(MainActivity.this, "Discovery Failed : " + reason, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        });
-        DeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final WifiP2pDevice device =deviceArray[position];
-                WifiP2pConfig config=new WifiP2pConfig();
-                config.deviceAddress=device.deviceAddress;
-                manager.connect(channel, config, new WifiP2pManager.ActionListener() {
-                    @Override
-                    public void onSuccess() {
-                        // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
-                        Toast.makeText(MainActivity.this, "Connected to "+device.deviceName, Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(int i) {
-                        Toast.makeText(MainActivity.this, "Connect failed. Retry.", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-            }
-        });
-       SendBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                String msg = InputMsg.getText().toString();
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(msg!=null&& isHost)
-                        {
-                            serverClass.write(msg.getBytes());
-
-                        }else if(msg!=null && !isHost)
-                        {
-                            clientClass.write(msg.getBytes());
-                        }
-                        else
-                        {
-                            Toast.makeText(MainActivity.this, "in-connect 3", Toast.LENGTH_SHORT).show();
-
-                        }
-                    }
-                });
-            }
-        });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MainActivity.PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION);
+            // After this point you wait for callback in
+            // onRequestPermissionsResult(int, String[], int[]) overridden method
+        }
     }
-
-
-
-
-    private boolean initP2P() {
-        SendBtn = (Button) findViewById(R.id.bt1);
-        DiscoveryBtn = (Button) findViewById(R.id.bt2);
-        DeviceList =(ListView) findViewById(R.id.lv1);
-        InputMsg =(EditText) findViewById(R.id.edt1);
-
-        // Device capability definition check
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
-            Toast.makeText(this, "Wi-Fi Direct is not supported by this device.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        // Hardware capability check
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (wifiManager == null) {
-            Toast.makeText(this, "Cannot get Wi-Fi system service.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        if (manager == null) {
-            Toast.makeText(this, "Cannot get Wi-Fi P2P system service.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        channel = manager.initialize(this, getMainLooper(), null);
-        if (channel == null) {
-            Toast.makeText(this, "Cannot initialize Wi-Fi P2P.", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        return true;
-    }
-
-    WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
-        @Override
-        public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-            if (!wifiP2pDeviceList.equals(peers)) {
-                peers.clear();
-                peers.addAll(wifiP2pDeviceList.getDeviceList());
-                deviceNameArray = new String[wifiP2pDeviceList.getDeviceList().size()];
-                deviceArray = new WifiP2pDevice[wifiP2pDeviceList.getDeviceList().size()];
-                int index = 0;
-                for (WifiP2pDevice device : wifiP2pDeviceList.getDeviceList()) {
-                    deviceNameArray[index] = device.deviceName;
-                    deviceArray[index] = device;
-                    index++;
-                }
-            }
-            ArrayAdapter<String > adapter=new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1,deviceNameArray);
-            DeviceList.setAdapter(adapter);
-            if(peers.size()==0)
-            {
-                Toast.makeText(MainActivity.this, "Empty", Toast.LENGTH_SHORT).show();
-                return;
-            }
-        }
-    };
-
-    WifiP2pManager.ConnectionInfoListener connectionInfoListener=new WifiP2pManager.ConnectionInfoListener() {
-        @Override
-        public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
-            final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
-            if(wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner)
-            {
-                Toast.makeText(MainActivity.this, "Connected ", Toast.LENGTH_SHORT).show();
-                isHost =true;
-                serverClass = new ServerClass();
-                serverClass.start();
-            }else if(wifiP2pInfo.groupFormed)
-            {
-                Toast.makeText(MainActivity.this, "connected ", Toast.LENGTH_SHORT).show();
-                isHost =false;
-                clientClass = new ClientClass(groupOwnerAddress);
-                clientClass.start();
-            }
-
-        }
-    };
-
-
-
-
 
     /** register the BroadcastReceiver with the intent values to be matched */
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         receiver = new WifiDirectBroadcastReceiver(manager, channel, this);
-        registerReceiver(receiver,intentFilter);
+        registerReceiver(receiver, intentFilter);
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         unregisterReceiver(receiver);
-
     }
 
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
-    }
-
-    public class  ServerClass extends Thread {
-        ServerSocket serverSocket;
-        private InputStream inputStream;
-
-        private OutputStream outputStream;
-        public  void write(byte[] bytes)
-        {
-            try {
-                outputStream.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public void clickDiscover(View view) {
+        if (!isWifiP2pEnabled) {
+            Toast.makeText(MainActivity.this, R.string.p2p_off_warning,
+                    Toast.LENGTH_SHORT).show();
+            return;
         }
+        final DeviceListFragment fragment = (DeviceListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.frag_list);
+        assert fragment != null;
+        fragment.onInitiateDiscovery();
+        manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
 
-
-
-        @Override
-        public void run() {
-            try {
-                serverSocket = new ServerSocket(8888);
-                socket = serverSocket.accept();
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
+            @Override
+            public void onSuccess() {
+                Toast.makeText(MainActivity.this, "Discovery Initiated",
+                        Toast.LENGTH_SHORT).show();
             }
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            Handler handler = new Handler(Looper.getMainLooper());
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    byte[] buffer = new byte[1024];
-                    int bytes;
-                    while (socket!=null)
-                    {
-                        try {
-                            bytes =inputStream.read(buffer);
-                            if(bytes>0)
-                            {
-                                int finalBytes=bytes;
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String tempMSG=new String(buffer,0,finalBytes);
-                                        Toast.makeText(MainActivity.this,tempMSG,Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Toast.makeText(MainActivity.this, "Discovery Failed : " + reasonCode,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public void clickP2P(View view) {
+        if (manager != null && channel != null) {
+
+            // Since this is the system wireless settings activity, it's
+            // not going to send us a result. We will be notified by
+            // WiFiDeviceBroadcastReceiver instead.
+
+            startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+        } else {
+            Log.e(TAG, "channel or manager is null");
+        }
+    }
+
+    /**
+     * Remove all peers and clear all fields. This is called on
+     * BroadcastReceiver receiving a state change event.
+     */
+    public void resetData() {
+        DeviceListFragment fragmentList = (DeviceListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.frag_list);
+        if (fragmentList != null) {
+            fragmentList.clearPeers();
+        }
+        if (fragmentDetails != null) {
+            fragmentDetails.resetViews();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.action_items, menu);
+        return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+     */
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.atn_direct_enable:
+                this.clickP2P(null);
+                return true;
+
+            case R.id.atn_direct_discover:
+                this.clickDiscover(null);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void showDetails(WifiP2pDevice device) {
+        DeviceDetailFragment fragment = (DeviceDetailFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.frag_detail);
+        assert fragment != null;
+        fragment.showDetails(device);
+
+    }
+
+    @Override
+    public void connect(WifiP2pConfig config) {
+        manager.connect(channel, config, new ActionListener() {
+
+            @Override
+            public void onSuccess() {
+                // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Toast.makeText(MainActivity.this, "Connect failed. Retry.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public void disconnect() {
+        final DeviceDetailFragment fragment = (DeviceDetailFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.frag_detail);
+        assert fragment != null;
+        fragment.resetViews();
+        manager.removeGroup(channel, new ActionListener() {
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Log.d(TAG, "Disconnect failed. Reason :" + reasonCode);
+
+            }
+
+            @Override
+            public void onSuccess() {
+                fragment.requireView().setVisibility(View.GONE);
+            }
+
+        });
+    }
+
+    @Override
+    public void onChannelDisconnected() {
+        // we will try once more
+        if (manager != null && !retryChannel) {
+            Toast.makeText(this, "Channel lost. Trying again", Toast.LENGTH_LONG).show();
+            resetData();
+            retryChannel = true;
+            manager.initialize(this, getMainLooper(), this);
+        } else {
+            Toast.makeText(this,
+                    "Severe! Channel is probably lost permanently. Try Disable/Re-Enable P2P.",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void cancelDisconnect() {
+
+        /*
+         * A cancel abort request by user. Disconnect i.e. removeGroup if
+         * already connected. Else, request WifiP2pManager to abort the ongoing
+         * request
+         */
+        if (manager != null) {
+            final DeviceListFragment fragment = (DeviceListFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.frag_list);
+            assert fragment != null;
+            if (fragment.getDevice() == null
+                    || fragment.getDevice().status == WifiP2pDevice.CONNECTED) {
+                disconnect();
+            } else if (fragment.getDevice().status == WifiP2pDevice.AVAILABLE
+                    || fragment.getDevice().status == WifiP2pDevice.INVITED) {
+
+                manager.cancelConnect(channel, new ActionListener() {
+
+                    @Override
+                    public void onSuccess() {
+                        Toast.makeText(MainActivity.this, "Aborting connection",
+                                Toast.LENGTH_SHORT).show();
                     }
-                }
-            });
-        }
-    }
 
-
-
-
-
-
-    public class ClientClass extends Thread
-    {
-        String hostAdd;
-        private InputStream inputStream;
-        private OutputStream outputStream;
-        public  void write(byte[] bytes)
-        {
-            try {
-                outputStream.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        public ClientClass(InetAddress hostAddress)
-        {
-            hostAdd=hostAddress.getHostAddress();
-            socket=new Socket();
-        }
-
-        @Override
-        public void run() {
-            try {
-                socket.connect(new InetSocketAddress(hostAdd,8888),500);
-                inputStream=socket.getInputStream();
-                outputStream=socket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            Handler handler=new Handler(Looper.getMainLooper());
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    byte[] buffer = new byte[1024];
-                    int bytes;
-                    while (socket!=null)
-                    {
-                        try {
-                            bytes =inputStream.read(buffer);
-                            if(bytes>0)
-                            {
-                                int finalBytes=bytes;
-                                handler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String tempMSG=new String(buffer,0,finalBytes);
-                                        Toast.makeText(MainActivity.this,tempMSG,Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                    @Override
+                    public void onFailure(int reasonCode) {
+                        Toast.makeText(MainActivity.this,
+                                "Connect abort request failed. Reason Code: " + reasonCode,
+                                Toast.LENGTH_SHORT).show();
                     }
-                }
-            });
+                });
+            }
         }
+
     }
 }
