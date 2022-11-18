@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/drawable-v24/cell.xml" value="0.1" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/activity_caro_with_ai.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/activity_caro_with_friend.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/activity_layout_set_list.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/caro_with_friend.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/content_caro_with_friend.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/continue_activity.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/home.xml" value="0.24895833333333334" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/layout_home.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/layout_set_list.xml" value="0.2359375" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/login_layout.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/register_layout.xml" value="0.25" />
+        <entry key="..\:/1/UI_Caro_Game/UI_Caro_Game/app/src/main/res/layout/setting_dialog.xml" value="0.25" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
