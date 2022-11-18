@@ -3,18 +3,11 @@ package com.example.p2p;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.InetAddresses;
 import android.net.NetworkInfo;
-import android.net.NetworkRequest;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.Log;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     private final WifiP2pManager manager;
@@ -43,12 +36,16 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 activity.setIsWifiP2pEnabled(false);
                 Toast.makeText(context, "Wifi is off", Toast.LENGTH_SHORT).show();
             }
+            Log.d(MainActivity.TAG, "P2P state changed - " + state);
         }else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action))
         {
-            if(manager!=null)
-            {
-                manager.requestPeers(channel,activity.peerListListener);
+            // request available peers from the wifi p2p manager. This is an
+            // asynchronous call and the calling activity is notified with a
+            // callback on PeerListListener.onPeersAvailable()
+            if (manager != null) {
+                manager.requestPeers(channel, (WifiP2pManager.PeerListListener) activity);
             }
+            Log.d(MainActivity.TAG, "P2P peers changed");
         }else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action))
         {
             if (manager == null) {
@@ -58,7 +55,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             NetworkInfo networkInfo = (NetworkInfo) intent
                     .getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             if(networkInfo.isConnected()) {
-                manager.requestConnectionInfo(channel, activity.connectionInfoListener);
+                // we are connected with the other device, request connection
+                // info to find group owner IP
+                manager.requestConnectionInfo(channel, activity);
+            } else {
+                // It's a disconnect
+                activity.connectionStatus.setText("Device Disconnected");
+                activity.resetData();
             }
         }
         else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action))
