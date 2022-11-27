@@ -55,7 +55,7 @@ import java.util.concurrent.Executors;
 public class HomeActivity extends FragmentActivity implements MainCallBacks {
     boolean isSuccess=false;
     EditText InputMsg;
-    Button Caro_AI, DiscoveryBtn;
+    Button Caro_AI, DiscoveryBtn, BluetoothBtn;
     ListView DeviceList;
     private WifiP2pManager manager;
     boolean isWifiP2pEnabled = false;
@@ -74,6 +74,7 @@ public class HomeActivity extends FragmentActivity implements MainCallBacks {
     boolean isHost;
     String deviceName;
     FragmentTransaction ft;
+
     public void setIsWifiP2pEnabled(boolean isWifiP2pEnabled) {
         this.isWifiP2pEnabled = isWifiP2pEnabled;
     }
@@ -100,8 +101,6 @@ public class HomeActivity extends FragmentActivity implements MainCallBacks {
         }
 
     }
-
-
 
 
     private boolean initP2P() {
@@ -398,6 +397,11 @@ public class HomeActivity extends FragmentActivity implements MainCallBacks {
                         Toast.makeText(HomeActivity.this, "Discovery Failed ", Toast.LENGTH_SHORT).show();
                     }
                 });
+            }
+            if(strValue==252)
+            {
+                Intent intent=new Intent(HomeActivity.this,BluetoothActivity.class);
+                startActivity(intent);
             }
            /* try {
                 fragCaro.onMsgFromMainToFragment(strValue);

@@ -21,7 +21,7 @@ public class FragHome extends Fragment implements FragmentCallBacks {
    Context context = null;
    String msg = "";
    Integer pos;
-   Button Caro_AI, DiscoveryBtn;
+   Button Caro_AI, DiscoveryBtn, BluetoothBtn;
    public static FragHome newInstance(String Arg) {
       FragHome fragment = new FragHome();
       Bundle args = new Bundle();
@@ -48,6 +48,7 @@ public class FragHome extends Fragment implements FragmentCallBacks {
       LinearLayout layout_left = (LinearLayout) inflater.inflate(R.layout.layout_home, null);
       Caro_AI=(Button) layout_left.findViewById(R.id.play_now);
       DiscoveryBtn=(Button) layout_left.findViewById(R.id.play_with_friend);
+      BluetoothBtn=(Button) layout_left.findViewById(R.id.play_with_friend_bluetooth);
       //txtLeft = (TextView) layout_left.findViewById(R.id.ID);
 
       ///ist = (ListView) layout_left.findViewById(R.id.list_item);
@@ -89,6 +90,12 @@ public class FragHome extends Fragment implements FragmentCallBacks {
             main.onMsgFromFragToMain("Left-frag", 251,"");
          }
       });
+        BluetoothBtn.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View v) {
+                main.onMsgFromFragToMain("Left-frag", 252,"");
+             }
+        });
       return layout_left;
    }
    @Override

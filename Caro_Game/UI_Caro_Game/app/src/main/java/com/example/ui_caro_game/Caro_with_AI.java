@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -333,7 +334,9 @@ public class Caro_with_AI extends AppCompatActivity {
             LinearLayout lnRow=new LinearLayout(context);
             for (int j=0;j<maxN;j++){
                 cell[i][j]=new ImageView(context);
-                cell[i][j].setBackground(drawCell[3]);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    cell[i][j].setBackground(drawCell[3]);
+                }
                 final int x=i;
                 final int y=j;
                 cell[i][j].setOnClickListener(new View.OnClickListener() {

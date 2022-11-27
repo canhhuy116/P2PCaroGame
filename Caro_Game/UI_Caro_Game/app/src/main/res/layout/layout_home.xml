@@ -7,37 +7,49 @@
     android:orientation="vertical"
     tools:context=".HomeActivity"
     >
+
     <ImageView
         android:layout_marginTop="100dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/in_app_logo"
         android:layout_gravity="center"
+        android:contentDescription="@string/logo_home" />
 
-        ></ImageView>
     <Button
         android:id="@+id/play_now"
         android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:text="Play Now"
+        android:layout_height="70dp"
+        android:text="@string/play_now"
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:padding="6dp"
         android:background="@drawable/button"
-        android:layout_gravity="center"
-        ></Button>
+        android:layout_gravity="center" />
+
     <Button
         android:id="@+id/play_with_friend"
         android:layout_width="250dp"
-        android:layout_height="60dp"
-        android:text="Play with friend"
+        android:layout_height="70dp"
+        android:text="@string/play_with_friend"
         android:layout_marginTop="40dp"
-        android:textSize="20dp"
+        android:textSize="20sp"
         android:textColor="@color/white"
         android:background="@drawable/button"
         android:padding="6dp"
-        android:layout_gravity="center"
-        ></Button>
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/play_with_friend_bluetooth"
+        android:layout_width="250dp"
+        android:layout_height="70dp"
+        android:text="@string/play_with_friend_by_bluetooth"
+        android:layout_marginTop="40dp"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:background="@drawable/button"
+        android:padding="6dp"
+        android:layout_gravity="center" />
 
     <LinearLayout
 
@@ -46,21 +58,24 @@
         android:gravity="bottom"
         android:orientation="horizontal"
         android:background="#F3FBFE">
+
         <ImageButton
             android:id="@+id/match_deactive_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/match_deactive"
-            ></ImageButton>
+            android:contentDescription="@string/history" />
+
         <ImageButton
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/home_active"
             android:gravity="bottom|center"
-            android:textColor="#44A1FF">
-        </ImageButton>
+            android:textColor="#44A1FF"
+            tools:ignore="SpeakableTextPresentCheck"
+            android:contentDescription="@string/play" />
 
         <ImageButton
             android:id="@+id/setting_button"
@@ -68,6 +83,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/setting_icon"
-            android:gravity="bottom|center"></ImageButton>
+            android:gravity="bottom|center"
+            android:contentDescription="@string/setting" />
     </LinearLayout>
 </LinearLayout>
