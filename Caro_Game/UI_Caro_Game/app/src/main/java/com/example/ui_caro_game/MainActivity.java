@@ -12,12 +12,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
     public static final String TAG = "Group 10";
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 1001;
     Button login_button,register_button;
+
+    EditText username,password;
+    DBHelper DB;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -51,11 +56,32 @@ public class MainActivity extends Activity {
         super.onStart();
         login_button= findViewById(R.id.login_button);
         register_button=findViewById(R.id.register_button);
+        username=findViewById(R.id.login_username);
+        password=findViewById(R.id.login_password);
+        DB=new DBHelper(this);
+
         login_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent home_page= new Intent(MainActivity.this,HomeActivity.class);
-                startActivity(home_page);
+                String user=username.getText().toString();
+                String pass=password.getText().toString();
+                if(user.equals("")|| pass.equals(""))
+                {
+                    Toast.makeText(MainActivity.this,"Please enter all fields",Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    Boolean login=DB.checkUsernamePassword(user,pass);
+                    if(login==true) {
+
+                        Intent home_page = new Intent(MainActivity.this, HomeActivity.class);
+                        startActivity(home_page);
+                    }
+                    else
+                    {
+                        Toast.makeText(MainActivity.this,"Login Failed",Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
         });
         register_button.setOnClickListener(new View.OnClickListener() {
