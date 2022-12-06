@@ -1,6 +1,7 @@
 package com.example.ui_caro_game;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -78,6 +80,13 @@ public class FragHome extends Fragment implements FragmentCallBacks {
 
          }
       });*/
+      ImageButton setting = (ImageButton) layout_left.findViewById(R.id.setting_button);
+      setting.setOnClickListener(new View.OnClickListener() {
+         @Override
+         public void onClick(View view) {
+            setting_dialog_show();
+         }
+      });
       Caro_AI.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View v) {
@@ -110,6 +119,27 @@ public class FragHome extends Fragment implements FragmentCallBacks {
          list.getChildAt(i).setBackgroundColor(Color.rgb(120, 223, 151));
          tmp=i;
       }*/
+   }
+   public void setting_dialog_show()
+   {
+      setting_dialog dialog=new setting_dialog(context);
+      dialog.show();
+
+      ImageButton close_setting_btn= dialog.findViewById(R.id.close_button);
+      close_setting_btn.setOnClickListener(new View.OnClickListener() {
+         @Override
+         public void onClick(View view) {
+            dialog.dismiss();
+         }
+      });
+      Button logout_btn=dialog.findViewById(R.id.logout_button);
+      logout_btn.setOnClickListener(new View.OnClickListener() {
+         @Override
+         public void onClick(View view) {
+            Intent logout = new Intent(context, MainActivity.class);
+            startActivity(logout);
+         }
+      });
    }
 
 }
