@@ -1,8 +1,11 @@
 package com.example.carofinal;
 
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -16,15 +19,19 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.ViewPropertyAnimatorCompat;
 
 import pl.droidsonroids.gif.GifImageView;
 
 public class LoginActivity extends AppCompatActivity implements View.OnTouchListener {
-
+    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 1001;
 
     public static final int STARTUP_DELAY = 300;
     public static final int ANIM_ITEM_DURATION = 1000;
@@ -46,6 +53,17 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
     DBHelper DB;
     Intent music_intent;
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                finish();
+            }
+        }
+    }
+    @RequiresApi(api = Build.VERSION_CODES.S)
+    @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
         getWindow().getDecorView().setSystemUiVisibility(
@@ -53,7 +71,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnTouchList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 1);
+        }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LoginActivity.PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION);
+            // After this point you wait for callback in
+            // onRequestPermissionsResult(int, String[], int[]) overridden method
+        }
 
 
         //settingsGifView  = (GifImageView) findViewById(R.id.seting_gifview_offline_menu);

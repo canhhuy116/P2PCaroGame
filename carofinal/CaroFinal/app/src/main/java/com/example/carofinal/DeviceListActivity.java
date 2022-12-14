@@ -60,6 +60,7 @@ public class DeviceListActivity extends Activity {
         // Set result CANCELED in case the user backs out
         setResult(Activity.RESULT_CANCELED);
 
+
         // Initialize the button to perform device discovery
         Button scanButton = findViewById(R.id.button_scan);
         scanButton.setOnClickListener(v -> {
@@ -123,6 +124,10 @@ public class DeviceListActivity extends Activity {
             String noDevices = getResources().getText(R.string.none_paired).toString();
             mPairedDevicesArrayAdapter.add(noDevices);
         }
+
+//        if(checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED){
+//            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_SCAN}, 1);
+//        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.S)

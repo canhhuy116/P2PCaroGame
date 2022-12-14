@@ -84,6 +84,7 @@ public class BluetoothActivity extends Activity {
     private BluetoothChatService mChatService = null;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,14 +131,6 @@ public class BluetoothActivity extends Activity {
             }
         });
 
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.S)
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (D) Log.e(TAG, "++ ON START ++");
-
         // If BT is not on, request that it be enabled.
         // setupChat() will then be called during onActivityResult
         if (!mBluetoothAdapter.isEnabled()) {
@@ -151,12 +144,30 @@ public class BluetoothActivity extends Activity {
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 1);
+            }if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_SCAN}, 1);
             }
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-            // Otherwise, setup the chat session
-        } else {
+        } else {    // Otherwise, setup the chat session
             if (mChatService == null) setupChat();
         }
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.S)
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (D) Log.e(TAG, "++ ON START ++");
+
+
     }
 
     @RequiresApi(api = Build.VERSION_CODES.S)
