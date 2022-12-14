@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/p2pBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enable_p2p_button"/>
+
+    <Button
+        android:id="@+id/sendBtn"
+        android:layout_width="wrap_content"
+        android:text="@string/send_msg_button"
+        android:layout_margin="20dp"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/discoveryBtn"
+        android:text="@string/discover_peers_button"
+        android:layout_width="wrap_content"
+        android:layout_margin="20dp"
+        android:layout_height="wrap_content" />
+
+    <EditText
+        android:id="@+id/edt1"
+        android:layout_width="match_parent"
+        android:background="@color/teal_200"
+        android:textColor="@color/white"
+        android:layout_margin="20dp"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        tools:ignore="LabelFor" />
+
+    <ListView
+        android:id="@+id/lv1"
+        android:layout_width="match_parent"
+        android:layout_margin="20dp"
+        android:layout_height="match_parent" />
+
+</LinearLayout>
