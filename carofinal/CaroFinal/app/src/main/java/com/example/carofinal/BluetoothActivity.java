@@ -30,23 +30,25 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 /**
  * This is the main Activity that displays the current chat session.
  */
-public class BluetoothActivity extends Activity {
+public class BluetoothActivity extends FragmentActivity implements MainCallBacks {
     // Debugging
     private static final String TAG = "BluetoothChat";
     private static final boolean D = true;
@@ -75,13 +77,18 @@ public class BluetoothActivity extends Activity {
     // Name of the connected device
     private String mConnectedDeviceName = null;
     // Array adapter for the conversation thread
-    private ArrayAdapter<String> mConversationArrayAdapter;
+//    private ArrayAdapter<String> mConversationArrayAdapter;
     // String buffer for outgoing messages
     private StringBuffer mOutStringBuffer;
     // Local Bluetooth adapter
     private BluetoothAdapter mBluetoothAdapter = null;
     // Member object for the chat services
     private BluetoothChatService mChatService = null;
+
+    FragHomeBluetooth fragHomeBluetooth;
+    Fragment_Caro_with_friend fragCaro;
+    FragmentTransaction ft;
+    DBHelper DB;
 
 
     @RequiresApi(api = Build.VERSION_CODES.S)
@@ -91,7 +98,15 @@ public class BluetoothActivity extends Activity {
         if (D) Log.e(TAG, "+++ ON CREATE +++");
 
         // Set up the window layout
-        setContentView(R.layout.layout_bluetooth);
+        setContentView(R.layout.layout_p2p);
+
+        ft = getSupportFragmentManager().beginTransaction();
+        fragHomeBluetooth = FragHomeBluetooth.newInstance("");
+        ft.replace(R.id.frame_home, fragHomeBluetooth);
+        ft.commit();
+        ft = getSupportFragmentManager().beginTransaction();
+        fragCaro = Fragment_Caro_with_friend.newInstance("");
+        DB=new DBHelper(this);
 
         // Get local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -101,57 +116,43 @@ public class BluetoothActivity extends Activity {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             finish();
         }
-        mSecureConnectBtn = findViewById(R.id.secure_connect_scan);
-        mInsecureConnectBtn = findViewById(R.id.insecure_connect_scan);
-        mStartDiscoveryBtn = findViewById(R.id.discoverable);
+//        mSecureConnectBtn = findViewById(R.id.secure_connect_scan);
+//        mInsecureConnectBtn = findViewById(R.id.insecure_connect_scan);
+//        mStartDiscoveryBtn = findViewById(R.id.discoverable);
 
-        mSecureConnectBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent serverIntent = new Intent(BluetoothActivity.this, DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-            }
-        });
-
-        mInsecureConnectBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent serverIntent = new Intent(BluetoothActivity.this, DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
-            }
-        });
-
-        mStartDiscoveryBtn.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.S)
-            @Override
-            public void onClick(View v) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ensureDiscoverable();
-                }
-            }
-        });
+//        mSecureConnectBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent serverIntent = new Intent(BluetoothActivity.this, DeviceListActivity.class);
+//                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
+//            }
+//        });
+//
+//        mInsecureConnectBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent serverIntent = new Intent(BluetoothActivity.this, DeviceListActivity.class);
+//                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
+//            }
+//        });
+//
+//        mStartDiscoveryBtn.setOnClickListener(new View.OnClickListener() {
+//            @RequiresApi(api = Build.VERSION_CODES.S)
+//            @Override
+//            public void onClick(View v) {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//                    ensureDiscoverable();
+//                }
+//            }
+//        });
 
         // If BT is not on, request that it be enabled.
         // setupChat() will then be called during onActivityResult
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_CONNECT}, 1);
             }if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_SCAN}, 1);
             }
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
@@ -192,23 +193,23 @@ public class BluetoothActivity extends Activity {
         Log.d(TAG, "setupChat()");
 
         // Initialize the array adapter for the conversation thread
-        mConversationArrayAdapter = new ArrayAdapter<>(this, R.layout.message);
+        //mConversationArrayAdapter = new ArrayAdapter<>(this, R.layout.message);
         // Layout Views
-        ListView mConversationView = findViewById(R.id.in);
-        mConversationView.setAdapter(mConversationArrayAdapter);
+        //ListView mConversationView = findViewById(R.id.in);
+        //mConversationView.setAdapter(mConversationArrayAdapter);
 
         // Initialize the compose field with a listener for the return key
-        mOutEditText = findViewById(R.id.edit_text_out);
-        mOutEditText.setOnEditorActionListener(mWriteListener);
+//        mOutEditText = findViewById(R.id.edit_text_out);
+//        mOutEditText.setOnEditorActionListener(mWriteListener);
 
         // Initialize the send button with a listener that for click events
-        Button mSendButton = findViewById(R.id.button_send);
-        mSendButton.setOnClickListener(v -> {
-            // Send a message using content of the edit text widget
-            @SuppressLint("CutPasteId") TextView view = findViewById(R.id.edit_text_out);
-            String message = view.getText().toString();
-            sendMessage(message);
-        });
+//        Button mSendButton = findViewById(R.id.button_send);
+//        mSendButton.setOnClickListener(v -> {
+//            // Send a message using content of the edit text widget
+//            @SuppressLint("CutPasteId") TextView view = findViewById(R.id.edit_text_out);
+//            String message = view.getText().toString();
+//            sendMessage(message);
+//        });
 
         // Initialize the BluetoothChatService to perform bluetooth connections
         mChatService = new BluetoothChatService(this, mHandler);
@@ -276,8 +277,8 @@ public class BluetoothActivity extends Activity {
             mChatService.write(send);
 
             // Reset out string buffer to zero and clear the edit text field
-            mOutStringBuffer.setLength(0);
-            mOutEditText.setText(mOutStringBuffer);
+//            mOutStringBuffer.setLength(0);
+//            mOutEditText.setText(mOutStringBuffer);
         }
     }
 
@@ -320,7 +321,7 @@ public class BluetoothActivity extends Activity {
                     switch (msg.arg1) {
                         case BluetoothChatService.STATE_CONNECTED:
                             setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-                            mConversationArrayAdapter.clear();
+//                            mConversationArrayAdapter.clear();
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
                             setStatus(R.string.title_connecting);
@@ -335,13 +336,15 @@ public class BluetoothActivity extends Activity {
                     byte[] writeBuf = (byte[]) msg.obj;
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
-                    mConversationArrayAdapter.add("Me:  " + writeMessage);
+                    check(writeMessage);
+//                    mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+                    check(readMessage);
+//                    mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
                     break;
                 case MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -358,18 +361,21 @@ public class BluetoothActivity extends Activity {
     };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(D) Log.d(TAG, "onActivityResult " + resultCode);
+        super.onActivityResult(requestCode, resultCode, data);
+        if (D) Log.d(TAG, "onActivityResult " + resultCode);
         switch (requestCode) {
             case REQUEST_CONNECT_DEVICE_SECURE:
                 // When DeviceListActivity returns with a device to connect
                 if (resultCode == Activity.RESULT_OK) {
                     connectDevice(data, true);
+                    replaceFragment(fragCaro);
                 }
                 break;
             case REQUEST_CONNECT_DEVICE_INSECURE:
                 // When DeviceListActivity returns with a device to connect
                 if (resultCode == Activity.RESULT_OK) {
                     connectDevice(data, false);
+                    replaceFragment(fragCaro);
                 }
                 break;
             case REQUEST_ENABLE_BT:
@@ -394,5 +400,71 @@ public class BluetoothActivity extends Activity {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         // Attempt to connect to the device
         mChatService.connect(device, secure);
+    }
+
+    private  void replaceFragment(Fragment fragment){
+        if(fragment!=null)
+        {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.frame_home,fragment);
+            fragmentTransaction.commit();
+        }
+    }
+
+    @Override
+    public void ChatFragToMain(String chat) {
+        sendMessage(chat);
+    }
+
+    @Override
+    public void SelectDeviceFragmenttoMain(int x) {
+        replaceFragment(fragCaro);
+    }
+
+    @Override
+    public void SelectEventFragmenttoMain(int ma) {
+        if(ma==1)
+        {
+            Intent serverIntent = new Intent(BluetoothActivity.this, DeviceListActivity.class);
+            startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
+        }
+        else if(ma==2)
+        {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                this.ensureDiscoverable();
+            }
+            replaceFragment(fragCaro);
+        }
+        else if(ma==6)//setting
+        {
+            Intent intent = new Intent(BluetoothActivity.this,SettingActivity.class);
+            startActivity(intent);
+        }
+        else if(ma==5)// mã play game
+        {
+            this.sendMessage("play");
+        }
+    }
+    private void check(String msg)
+    {
+        if(msg.equals(("play")))
+        {
+            fragCaro.InitgameMaintoFrag(true);
+        }
+        else
+        {
+            String[] tmp=msg.split("//");
+            if(tmp.length==1)
+            {
+                fragCaro.ChatMainToFrag(msg);
+            }
+            else// chỗ này là đánh cờ
+            {
+                String[] tmp_x_y=tmp[1].split(" ");
+                fragCaro.PlayFromMainToFragment(Integer.parseInt(tmp_x_y[0]),Integer.parseInt(tmp_x_y[1]));
+            }
+        }
+
     }
 }

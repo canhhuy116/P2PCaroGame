@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import com.skydoves.balloon.ArrowPositionRules;
 import com.skydoves.balloon.Balloon;
@@ -31,7 +33,7 @@ import java.util.Random;
 import pl.droidsonroids.gif.GifImageView;
 
 public class Fragment_Caro_with_friend extends Fragment implements FragmentCallBacks {
-    Caro_p2p main;
+    FragmentActivity main;
     EditText edt1;
     TextView tv1;
     Button bt_send;
@@ -68,7 +70,16 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         {
             throw new IllegalStateException("Error");
         }
-        main = (Caro_p2p) getActivity();
+        // check what is main of fragment
+        if(getActivity() instanceof Caro_p2p)
+        {
+            main=(Caro_p2p) getActivity();
+        }
+        else if(getActivity() instanceof BluetoothActivity)
+        {
+            main=(BluetoothActivity) getActivity();
+        }
+
         context=getActivity();
 
     }
@@ -110,7 +121,14 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
                         if (drawable instanceof Animatable) {
                             ((Animatable) drawable).stop();
                         }
-                        main.SelectEventFragmenttoMain(6);
+                        if(main instanceof Caro_p2p)
+                        {
+                            ((Caro_p2p) main).SelectEventFragmenttoMain(6);
+                        }
+                        else if(main instanceof BluetoothActivity)
+                        {
+                            ((BluetoothActivity) main).SelectEventFragmenttoMain(6);
+                        }
                     }
                 }, 500);
             }
@@ -129,7 +147,14 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                main.SelectEventFragmenttoMain(5);
+                if(main instanceof Caro_p2p)
+                {
+                    ((Caro_p2p) main).SelectEventFragmenttoMain(5);
+                }
+                else if(main instanceof BluetoothActivity)
+                {
+                    ((BluetoothActivity) main).SelectEventFragmenttoMain(5);
+                }
                 init_game();
                 play_game();
 
@@ -258,7 +283,9 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
             LinearLayout lnRow=new LinearLayout(context);
             for (int j=0;j<maxN;j++){
                 cell[i][j]=new ImageView(context);
-                cell[i][j].setBackground(drawCell[3]);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    cell[i][j].setBackground(drawCell[3]);
+                }
                 final int x=i;
                 final int y=j;
                 cell[i][j].setOnClickListener(new View.OnClickListener() {
@@ -270,7 +297,14 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
                             if(valueCell[x][y]==0) {
                                 String text=".//"+String.valueOf(x)+" "+String.valueOf(y);
                                 //main.onMsgFromFragToMain("play",1,text);
-                                main.ChatFragToMain(text);
+                                if(main instanceof Caro_p2p)
+                                {
+                                    ((Caro_p2p) main).ChatFragToMain(text);
+                                }
+                                else if(main instanceof BluetoothActivity)
+                                {
+                                    ((BluetoothActivity) main).ChatFragToMain(text);
+                                }
                                 xMove = x;
                                 yMove = y;
                                 makeMove();
