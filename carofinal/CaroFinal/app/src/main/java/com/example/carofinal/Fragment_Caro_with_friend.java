@@ -155,8 +155,10 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
                 {
                     ((BluetoothActivity) main).SelectEventFragmenttoMain(5);
                 }
+                myTurn=1;
                 init_game();
                 play_game();
+                Toast.makeText(context,"Host Innit_game",Toast.LENGTH_SHORT).show();
 
             }
         });
@@ -167,9 +169,10 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
     public void InitgameMaintoFrag(Boolean check)
     {
         if(check){
+            this.myTurn = 2;
             init_game();
             play_game();
-            Toast.makeText(context,"Innit_game",Toast.LENGTH_SHORT).show();
+            Toast.makeText(context,"Client Innit_game",Toast.LENGTH_SHORT).show();
         }
     }
     @Override
@@ -323,14 +326,23 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         return dm.widthPixels;
     }
     private void play_game(){
-        Random r=new Random();
-        turnPlay=r.nextInt(2)+1;
+        turnPlay=1;
         if(turnPlay==myTurn){
             Toast.makeText(context,"My Turn",Toast.LENGTH_SHORT).show();
-            player1Turn();
+            if(myTurn== 1) {
+                player1Turn();
+            }
+            else {
+                player2Turn();
+            }
         }else{
             Toast.makeText(context,"--Check--",Toast.LENGTH_SHORT).show();
-            player2Turn();
+            if(myTurn== 1) {
+                player2Turn();
+            }
+            else {
+                player1Turn();
+            }
         }
     }
     private void player1Turn(){

@@ -336,7 +336,7 @@ public class BluetoothActivity extends FragmentActivity implements MainCallBacks
                     byte[] writeBuf = (byte[]) msg.obj;
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
-                    check(writeMessage);
+//                    check(writeMessage);
 //                    mConversationArrayAdapter.add("Me:  " + writeMessage);
                     break;
                 case MESSAGE_READ:
