@@ -2,10 +2,10 @@ package com.example.carofinal;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,23 +21,21 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import com.skydoves.balloon.ArrowPositionRules;
 import com.skydoves.balloon.Balloon;
 import com.skydoves.balloon.BalloonAnimation;
 import com.skydoves.balloon.BalloonSizeSpec;
 
-import java.util.Random;
-import java.util.zip.Inflater;
-
 import pl.droidsonroids.gif.GifImageView;
 
-public class Fragment_Caro_with_friend extends Fragment implements FragmentCallBacks {
-    Caro_p2p main;
+public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements FragmentCallBacks {
+    BluetoothActivity main;
     EditText edt1;
     TextView tv1;
     Button bt_send;
-    ImageView wifi_profile_friend,btn_wifi_chat;
+    ImageView wifi_profile_friend, btn_wifi_chat;
     DBHelper DB;
     TextView user_name_txt_wifi_player2,user_name_txt_wifi_player1;
     TextView player_two_won_txt_wifi_player1,player_two_won_txt_wifi_player2;
@@ -54,9 +52,9 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
     private int xMove,yMove;
     private int[][] valueCell=new int[maxN][maxN];
     private int turnPlay,myTurn=0;
-    public static Fragment_Caro_with_friend newInstance(String Arg1)
+    public static Fragment_Caro_with_friend_Bluetooth newInstance(String Arg1)
     {
-        Fragment_Caro_with_friend fragment= new Fragment_Caro_with_friend();
+        Fragment_Caro_with_friend_Bluetooth fragment= new Fragment_Caro_with_friend_Bluetooth();
         Bundle bundle = new Bundle();
         bundle.putString("Arg1",Arg1);
         fragment.setArguments(bundle);
@@ -70,7 +68,8 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         {
             throw new IllegalStateException("Error");
         }
-        main = (Caro_p2p) getActivity();
+        // check what is main of fragment
+        main=(BluetoothActivity) getActivity();
         context=getActivity();
 
     }
@@ -78,6 +77,9 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
     public View onCreateView( LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
         LinearLayout layout_right=(LinearLayout) inflater.inflate(R.layout.caro_with_friend,null);
         boardGame=(LinearLayout) layout_right.findViewById(R.id.boardGame_wifi);
+        //edt1=(EditText) layout_right.findViewById(R.id.edt1);
+        //tv1=(TextView) layout_right.findViewById(R.id.tv1);
+        //bt_send=(Button) layout_right.findViewById(R.id.send);
         btnPlay=(ImageView) layout_right.findViewById(R.id.btn_play_wifi);
         tvTurn=(TextView) layout_right.findViewById(R.id.turn_player_wifi);
         settingsGifView  = (GifImageView)layout_right.findViewById(R.id.ai_game_seting_gifview_wifi);
@@ -90,7 +92,6 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         DB=new DBHelper(context);
         player_two_won_txt_wifi_player1.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));// vàng
         user_name_txt_wifi_player1.setText(LoginActivity.user_ID);
-
 
         settingsGifView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -117,23 +118,30 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         });
 
 
-
         loadResources();
         designBoardGame();
-
+        /*bt_send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String msg=edt1.getText().toString();
+                main.ChatFragToMain(msg);
+            }
+        });*/
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 main.SelectEventFragmenttoMain(5);
+                myTurn=1;
                 init_game();
                 play_game();
+                Toast.makeText(context,"Host Innit_game",Toast.LENGTH_SHORT).show();
 
             }
         });
+
         btn_wifi_chat.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Dialog dialog=new Dialog(context);
                 dialog.setTitle("message");
                 dialog.setContentView(R.layout.dialog_custom_chat_wifi);
@@ -147,16 +155,11 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
                     }
                 });
                 dialog.show();
-
             }
         });
 
-        /*bt_send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                main.ChatFragToMain(tv1.getText().toString());
-            }
-        });*/
+
+
         return layout_right;
     }
 
@@ -164,7 +167,6 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         //initialize your view here for use view.findViewById("your view id")
         bt_send = (Button) view.findViewById(R.id.btn_chat_wifi_dialog);
     }
@@ -173,9 +175,10 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
     public void InitgameMaintoFrag(Boolean check)
     {
         if(check){
+            this.myTurn = 2;
             init_game();
             play_game();
-            Toast.makeText(context,"Innit_game",Toast.LENGTH_SHORT).show();
+            Toast.makeText(context,"Client Innit_game",Toast.LENGTH_SHORT).show();
         }
     }
     @Override
@@ -222,37 +225,25 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         {
             myTurn=1;
             String sendid=user_name_txt_wifi_player1.getText().toString();
+//            String send_id="id."+LoginActivity.user_ID+"."+String.valueOf(DB.getGold(LoginActivity.user_ID));
             Toast.makeText(context,sendid,Toast.LENGTH_SHORT).show();
-            //main.ChatFragToMain(sendid);
-
         }
         else if(chat.equals("client"))
         {
             myTurn=2;
+
             String sendid=user_name_txt_wifi_player1.getText().toString();
+//            String send_id="id."+LoginActivity.user_ID+"."+String.valueOf(DB.getGold(LoginActivity.user_ID));
             Toast.makeText(context,sendid,Toast.LENGTH_SHORT).show();
-            // main.ChatFragToMain(sendid);
         }
         else
         {
+
             Balloon chat_tmp= chat_p2p(chat);
+////            while (true)
             chat_tmp.showAlignBottom(wifi_profile_friend);
         }
-       /* else
-        {
-
-            if(tmp[0].equals("id"))
-            {
-                player_two_won_txt_wifi_player2.setText(String.valueOf(tmp[2]));
-                user_name_txt_wifi_player2.setText(String.valueOf(tmp[1]));
-            }
-            else
-            {
-                Balloon chat_tmp= chat_p2p(chat);
-                chat_tmp.showAlignBottom(wifi_profile_friend);
-            }
-        }*/
-        //else tv1.setText(chat);
+       //else tv1.setText(chat);
     }
     private void loadResources(){
         drawCell[0]=null;
@@ -268,7 +259,9 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
             LinearLayout lnRow=new LinearLayout(context);
             for (int j=0;j<maxN;j++){
                 cell[i][j]=new ImageView(context);
-                cell[i][j].setBackground(drawCell[3]);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    cell[i][j].setBackground(drawCell[3]);
+                }
                 final int x=i;
                 final int y=j;
                 cell[i][j].setOnClickListener(new View.OnClickListener() {
@@ -299,14 +292,23 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         return dm.widthPixels;
     }
     private void play_game(){
-        Random r=new Random();
-        turnPlay=r.nextInt(2)+1;
+        turnPlay=1;
         if(turnPlay==myTurn){
             Toast.makeText(context,"My Turn",Toast.LENGTH_SHORT).show();
-            player1Turn();
+            if(myTurn== 1) {
+                player1Turn();
+            }
+            else {
+                player2Turn();
+            }
         }else{
             Toast.makeText(context,"--Check--",Toast.LENGTH_SHORT).show();
-            player2Turn();
+            if(myTurn== 1) {
+                player2Turn();
+            }
+            else {
+                player1Turn();
+            }
         }
     }
     private void player1Turn(){
@@ -439,19 +441,19 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
     {
         Balloon tmp;
         tmp=new  Balloon.Builder(context)
-                .setWidthRatio(1.0f)
-                .setHeight(BalloonSizeSpec.WRAP)
-                .setText(text)
-                .setTextColorResource(R.color.white_87)
-                .setTextSize(15f)
-                .setArrowPositionRules(ArrowPositionRules.ALIGN_ANCHOR)
-                .setArrowSize(10)
-                .setArrowPosition(0.5f)
-                .setPadding(12)
-                .setCornerRadius(8f)
-                .setBackgroundColorResource(R.color.black)
-                .setBalloonAnimation(BalloonAnimation.ELASTIC)
-                .build();
+            .setWidthRatio(1.0f)
+            .setHeight(BalloonSizeSpec.WRAP)
+            .setText(text)
+            .setTextColorResource(R.color.white_87)
+            .setTextSize(15f)
+            .setArrowPositionRules(ArrowPositionRules.ALIGN_ANCHOR)
+            .setArrowSize(10)
+            .setArrowPosition(0.5f)
+            .setPadding(12)
+            .setCornerRadius(8f)
+            .setBackgroundColorResource(R.color.black)
+            .setBalloonAnimation(BalloonAnimation.ELASTIC)
+            .build();
         return  tmp;
     }
 }
