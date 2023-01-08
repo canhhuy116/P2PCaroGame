@@ -1,5 +1,4 @@
-package com.example.gomoku1;
-
+package com.example.carofinal;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -17,7 +16,7 @@ public class DialogWinner extends AppCompatDialogFragment {
         builder.setTitle("Winner").setMessage("HIHI").setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-               // openDialog();
+                // openDialog();
             }
         });
         //return super.onCreateDialog(savedInstanceState);
