@@ -64,6 +64,7 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     private int xMove,yMove;
     private int[][] valueCell=new int[maxN][maxN];
     private int turnPlay,myTurn=0;
+    private Integer chooseSkin=0;
     public static String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
     public static Fragment_Caro_with_friend_Bluetooth newInstance(String Arg1)
     {
@@ -85,6 +86,7 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         main=(BluetoothActivity) getActivity();
         context=getActivity();
 
+
     }
     @Override
     public View onCreateView( LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
@@ -105,6 +107,7 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         wifi_profile_friend=(ImageView) layout_right.findViewById(R.id.wifi_profile_friend);
         btn_wifi_chat=(ImageView) layout_right.findViewById(R.id.btn_wifi_chat);
         DB=new DBHelper(context);
+        chooseSkin= DB.getChoosen(LoginActivity.user_ID);
         player_two_won_txt_wifi_player1.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));// vàng
         user_name_txt_wifi_player1.setText(LoginActivity.user_ID);
         backBtn.setOnClickListener(new View.OnClickListener() {
@@ -278,9 +281,33 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     }
     private void loadResources(){
         drawCell[0]=null;
-        drawCell[1]=context.getResources().getDrawable(R.drawable.x);
-        drawCell[2]=context.getResources().getDrawable(R.drawable.o);
-        drawCell[3]=context.getResources().getDrawable(R.drawable.cell);
+
+
+        if (turnPlay == 1) {
+            if (chooseSkin == 0) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.x);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.o);
+            } else if (chooseSkin == 1) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.x1);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.o1);
+            } else if (chooseSkin == 2) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.x2);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.o2);
+            }
+
+        } else {
+            if (chooseSkin == 0) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.o);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.x);
+            } else if (chooseSkin == 1) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.o1);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.x1);
+            } else if (chooseSkin == 2) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.o2);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.x2);
+            }
+        }
+        drawCell[3] = context.getResources().getDrawable(R.drawable.cell);
     }
     private void designBoardGame(){
         int sizeOfCell=Math.round((ScreenWidth())/maxN);
@@ -400,12 +427,10 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
 
         if(turnPlay==1){
             turnPlay=3-turnPlay;
-            Toast.makeText(context,"HIHI",Toast.LENGTH_SHORT).show();
 
             player2Turn();
         }else{
             turnPlay=3-turnPlay;
-            Toast.makeText(context,"Haha",Toast.LENGTH_SHORT).show();
 
             player1Turn();
         }
@@ -469,7 +494,6 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         return true;
     }
     private void EvalEnd(String st){
-        Toast.makeText(context,st,Toast.LENGTH_SHORT).show();
 
         switch (st){
             case "11111":

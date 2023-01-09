@@ -97,6 +97,7 @@ class customAdapter extends ArrayAdapter<String>
                 Intent hehe=new Intent(context,AiGameActivity.class);
 
                 hehe.putExtra("lichsu",lichsu.get(len-1-position));
+                hehe.putExtra("ketqua",ketqua.get(len-1-position));
                 context.startActivity(hehe);
                 // Toast.makeText(context,lichsu.get(len-1-position),Toast.LENGTH_LONG).show();
             }

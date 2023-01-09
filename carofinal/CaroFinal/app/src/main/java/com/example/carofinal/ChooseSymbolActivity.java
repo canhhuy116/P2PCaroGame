@@ -1,5 +1,6 @@
 package com.example.carofinal;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -13,14 +14,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class ChooseSymbolActivity extends AppCompatActivity implements View.OnTouchListener {
 
-
+    Context context;
     private ImageView BackBtn , CrossImg , CrossRadioImg , CircleImg , CircleRadioImg;
     private Button ContinueBtn;
 
     int PICK_SIDE=1 ;
     private String playerOne;
     private String playerTwo;
-
+    int chooseSkin=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,7 @@ public class ChooseSymbolActivity extends AppCompatActivity implements View.OnTo
 
         playerOne = getIntent().getStringExtra("p1");
         playerTwo = getIntent().getStringExtra("p2");
-
+        chooseSkin= getIntent().getIntExtra("skin",0);
         BackBtn= (ImageView) findViewById(R.id.pick_side_back_btn);
         CrossImg= (ImageView) findViewById(R.id.pick_side_cross_img);
         CircleImg= (ImageView) findViewById(R.id.pick_side_circle_img);
@@ -97,6 +98,7 @@ public class ChooseSymbolActivity extends AppCompatActivity implements View.OnTo
                 intent.putExtra("p1",playerOne);
                 intent.putExtra("p2",playerTwo);
                 intent.putExtra("ps",PICK_SIDE);
+                intent.putExtra("skin1",chooseSkin);
                 startActivity(intent);
             }
         });

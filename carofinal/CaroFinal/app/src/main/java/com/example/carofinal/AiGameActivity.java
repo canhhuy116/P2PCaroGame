@@ -11,7 +11,6 @@ import android.graphics.drawable.Animatable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.DisplayMetrics;
@@ -19,7 +18,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,10 +26,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 
 import pl.droidsonroids.gif.GifImageView;
 
@@ -53,13 +49,14 @@ public class AiGameActivity extends AppCompatActivity {
     private Integer PICK_SIDE = 1;
     private ImageView backBtn, restart;
     private GifImageView settingsGifView;
-
+    private int chooseSkin=0;
     public static SimpleDateFormat Date_Format = new SimpleDateFormat("dd/mm/yyyy");
     public static String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
     String lichsu = "";
     public static String nuocdi = "";
-    LinearLayout duyancut;
-    private Integer count=1;
+    LinearLayout layout_lichsudau;
+    private Integer count=0;
+    String ketqua="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,12 +74,16 @@ public class AiGameActivity extends AppCompatActivity {
         settingsGifView = (GifImageView) findViewById(R.id.ai_game_seting_gifview);
         restart = (ImageView) findViewById(R.id.newgame);
         PICK_SIDE = getIntent().getIntExtra("ps", 1);
+        player_two_won_txt_AI=(TextView) findViewById(R.id.player_two_won_txt_AI);
 
-        duyancut=(LinearLayout) findViewById(R.id.huhuhu);
+
+        layout_lichsudau =(LinearLayout) findViewById(R.id.huhuhu);
 
         Intent hehe = getIntent();
+
         if (hehe.getStringExtra("lichsu") != null) {
             lichsu = hehe.getStringExtra("lichsu");
+            ketqua=hehe.getStringExtra("ketqua");
             // Toast.makeText(context, ahihi[0], Toast.LENGTH_SHORT).show();
         } else {
             lichsu = "";
@@ -216,6 +217,7 @@ public class AiGameActivity extends AppCompatActivity {
 
         tvTurn = (TextView) findViewById(R.id.tvTurn1);
         DB = new DBHelper(this);
+        chooseSkin = DB.getChoosen(LoginActivity.user_ID);
         user_name_txt_Ai = (TextView) findViewById(R.id.user_name_txt_Ai);
         player_two_won_txt_AI = (TextView) findViewById(R.id.player_two_won_txt_AI);
 
@@ -488,11 +490,12 @@ public class AiGameActivity extends AppCompatActivity {
                     player_two_won_txt_AI.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));
 
                     DB.insertMatch(LoginActivity.user_ID, "BOT", "Win", currentDate, nuocdi);
+                    nuocdi="";
 
                 } else if (winnerPlay == 2) {
                     Toast.makeText(context, "Winner is Bot", Toast.LENGTH_SHORT).show();
                     DB.insertMatch(LoginActivity.user_ID, "BOT", "Lose", currentDate, nuocdi);
-
+                    nuocdi="";
                 }
                 openDialog();
 
@@ -516,11 +519,28 @@ public class AiGameActivity extends AppCompatActivity {
     private void loadResources() {
         drawCell[0] = null;
         if (PICK_SIDE == 1) {
-            drawCell[1] = context.getResources().getDrawable(R.drawable.x);
-            drawCell[2] = context.getResources().getDrawable(R.drawable.o);
+            if (chooseSkin == 0) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.x);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.o);
+            } else if (chooseSkin == 1) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.x1);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.o1);
+            } else if (chooseSkin == 2) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.x2);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.o2);
+            }
+
         } else {
-            drawCell[1] = context.getResources().getDrawable(R.drawable.o);
-            drawCell[2] = context.getResources().getDrawable(R.drawable.x);
+            if (chooseSkin == 0) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.o);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.x);
+            } else if (chooseSkin == 1) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.o1);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.x1);
+            } else if (chooseSkin == 2) {
+                drawCell[1] = context.getResources().getDrawable(R.drawable.o2);
+                drawCell[2] = context.getResources().getDrawable(R.drawable.x2);
+            }
         }
         drawCell[3] = context.getResources().getDrawable(R.drawable.cell);
     }
@@ -680,19 +700,12 @@ public class AiGameActivity extends AppCompatActivity {
                     valueCell[i][j] = 0;
                 }
             }
-//
-//            try {
-//                        Thread.sleep(5000);
-//                        // Do some stuff
-//                    } catch (Exception e) {
-//                        e.getLocalizedMessage();
-//                    }
 
 
 
             String[] split1 = nuocdi.split("//");
-            drawCell[1] = context.getResources().getDrawable(R.drawable.x);
-            drawCell[2] = context.getResources().getDrawable(R.drawable.o);
+//            drawCell[1] = context.getResources().getDrawable(R.drawable.x);
+//            drawCell[2] = context.getResources().getDrawable(R.drawable.o);
             ArrayList<String[]> temp = new ArrayList<String[]>();
             for (int i = 0; i < split1.length; i++) {
                 temp.add(split1[i].split(","));
@@ -706,7 +719,7 @@ public class AiGameActivity extends AppCompatActivity {
             Integer y = Integer.valueOf(ahihi[2]);
             cell[x][y].setImageDrawable(drawCell[tempPlay]);
             valueCell[x][y] = tempPlay;
-            duyancut.setOnClickListener(new View.OnClickListener() {
+            layout_lichsudau.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
 
@@ -721,11 +734,20 @@ public class AiGameActivity extends AppCompatActivity {
                     if(count==temp.size())
                     {
                         Dialog dialog=new Dialog(context);
-                        dialog.setTitle("message");
+
                         dialog.setContentView(R.layout.dialog_history_end);
-                        Button btn_chat=dialog.findViewById(R.id.btn_return);
-//
-                        btn_chat.setOnClickListener(new View.OnClickListener() {
+                        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                        dialog.setCanceledOnTouchOutside(false);
+
+                        TextView status_history = dialog.findViewById(R.id.status_history);
+                        if (ketqua.equals("Win")) {
+                            status_history.setText(" win !!!");
+                        } else  {
+                            status_history.setText("Lose !!!");
+                        }
+
+                        Button return_history = dialog.findViewById(R.id.return_history);
+                        return_history.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 Intent intent=new Intent(AiGameActivity.this,MatchHistory.class);

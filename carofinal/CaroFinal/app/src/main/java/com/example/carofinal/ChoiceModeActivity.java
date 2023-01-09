@@ -27,6 +27,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.ViewPropertyAnimatorCompat;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import pl.droidsonroids.gif.GifImageView;
 
 public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouchListener {
@@ -45,6 +48,11 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
     private ImageView logout;
     Dialog quitdialog;
     TextView name,gold;
+    Dialog shop;
+    Integer chooseSkin=0;
+    Integer choosen=0;
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
@@ -62,8 +70,9 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
         logout=(ImageView) findViewById(R.id.logoutbtn) ;
 
         quitdialog = new Dialog(this);
+        shop=new Dialog(this);
         DB=new DBHelper(this);
-
+        choosen=DB.getChoosen(LoginActivity.user_ID);
 
         name=(TextView) findViewById(R.id.user_name_txt);
         name.setText(LoginActivity.user_ID);
@@ -111,6 +120,7 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(    ChoiceModeActivity.this,ChooseSymbolActivity.class);
+                intent.putExtra("skin",DB.getChoosen(LoginActivity.user_ID));
                 startActivity(intent);
             }
         });
@@ -128,7 +138,7 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
         Shopping.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                shopDialogFun();
             }
         });
 
@@ -171,7 +181,13 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
 
 
     }
+    @Override
+    protected void onResume() {
+        LoginActivity.user_Gold=DB.getGold(LoginActivity.user_ID);
+        gold.setText(String.valueOf(LoginActivity.user_Gold));
+        super.onResume();
 
+    }
 
 
     private int getScreenResolution(Context context)
@@ -246,7 +262,169 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
         }
         return false;
     }
+    boolean checkInArray(int[] arr, int toCheckValue)
+    {
 
+        for (int i=0;i<arr.length;i++){
+            if (arr[i]==toCheckValue){
+                return true;
+            }
+        }
+        return false;
+
+    }
+    private void  shopDialogFun() {
+
+
+        shop.setContentView(R.layout.shop_dialog);
+        shop.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        shop.setCanceledOnTouchOutside(false);
+
+        TextView user_gold=(TextView) shop.findViewById(R.id.user_gold);
+        user_gold.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));
+        String listSkinDB=DB.getListSkin(LoginActivity.user_ID);
+
+        List<Integer> listSkin=new ArrayList<>();
+
+        if (listSkinDB.length()==1)
+        {
+            int temp= Integer.parseInt(listSkinDB);
+            listSkin.add(temp);
+
+        }
+        else
+        {
+            String[] list=listSkinDB.split(",");
+            for (int i=0;i<list.length;i++)
+            {
+                listSkin.add(Integer.parseInt(list[i]));
+            }
+        }
+
+        Button skin0=shop.findViewById(R.id.skin0);
+        Button skin1 = shop.findViewById(R.id.skin1);
+        Button skin2=shop.findViewById(R.id.skin2);
+        for (int i=0;i<listSkin.size();i++){
+            if(listSkin.get(i)==0){
+                skin0.setText("Choose");
+            }else if(listSkin.get(i)==1){
+                skin1.setText("Choose");
+            }else if (listSkin.get(i)==2)
+            {
+                skin2.setText("Choose");
+            }
+        }
+        if (choosen==0){
+            skin0.setText("Choosen");
+
+        }else if (choosen==1){
+            skin1.setText("Choosen");
+        }else if (choosen==2){
+            skin2.setText("Choosen");
+        }
+        ImageView exit=shop.findViewById(R.id.exit);
+        exit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shop.dismiss();
+
+            }
+        });
+        skin0.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                chooseSkin=0;
+                if (listSkin.indexOf(1)>=0) {
+                    skin1.setText("Choose");
+                }
+                if (listSkin.indexOf(2)>=0) {
+                    skin2.setText("Choose");
+                }
+                skin0.setText("Choosen");
+                DB.updateChoosen(LoginActivity.user_ID,0);
+                quitdialog.dismiss();
+            }
+        });
+        if(listSkin.indexOf(1)<0){
+            skin1.setText("Buy: 10");
+        }
+        if(listSkin.indexOf(2)<0){
+            skin2.setText("Buy: 20");
+        }
+        skin1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(listSkin.indexOf(1)<0){
+                    if(LoginActivity.user_Gold>=10)
+                    {
+                        LoginActivity.user_Gold-=10;
+                        DB.updateGold(LoginActivity.user_ID,LoginActivity.user_Gold);
+                        user_gold.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));
+                        listSkin.add(1);
+                        DB.updatelistSkin(LoginActivity.user_ID,1);
+                        skin1.setText("Choose");
+                        LoginActivity.user_Gold=DB.getGold(LoginActivity.user_ID);
+                        gold.setText(String.valueOf(LoginActivity.user_Gold));
+
+                    }
+                    else {
+                        Toast.makeText(ChoiceModeActivity.this,"not enough money",Toast.LENGTH_SHORT).show();
+
+                    }
+                }else {
+                    choosen=1;
+                    chooseSkin = 1;
+                    skin1.setText("Choosen");
+                    if (listSkin.indexOf(2)>=0){
+                        skin2.setText("Choose");
+                    }
+
+                    skin0.setText("Choose");
+                    DB.updateChoosen(LoginActivity.user_ID,1);
+
+                }
+                quitdialog.dismiss();
+            }
+        });
+        skin2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(listSkin.indexOf(2)<0){
+                    if(LoginActivity.user_Gold>=20)
+                    {
+                        LoginActivity.user_Gold-=20;
+                        listSkin.add(2);
+                        DB.updateGold(LoginActivity.user_ID,LoginActivity.user_Gold);
+                        user_gold.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));
+                        DB.updatelistSkin(LoginActivity.user_ID,2);
+                        skin2.setText("Choose");
+                        LoginActivity.user_Gold=DB.getGold(LoginActivity.user_ID);
+                        gold.setText(String.valueOf(LoginActivity.user_Gold));
+
+                    }
+                    else {
+                        Toast.makeText(ChoiceModeActivity.this,"not enough money",Toast.LENGTH_SHORT).show();
+                    }
+
+                }else {
+                    choosen=2;
+                    chooseSkin = 2;
+                    if (listSkin.indexOf(1)>=0) {
+                        skin1.setText("Choose");
+                    }
+                    skin2.setText("Choosen");
+                    skin0.setText("Choose");
+                    DB.updateChoosen(LoginActivity.user_ID,2);
+
+                }
+
+                quitdialog.dismiss();
+            }
+        });
+
+        shop.show();
+    }
     private void  quitDialogfun() {
 
 

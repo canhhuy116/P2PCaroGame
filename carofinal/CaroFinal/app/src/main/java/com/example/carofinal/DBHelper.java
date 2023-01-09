@@ -18,7 +18,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase MyDB) {
-        MyDB.execSQL("create table users(username TEXT PRIMARY KEY, password TEXT,gold INTEGER)");
+        MyDB.execSQL("create table users(username TEXT PRIMARY KEY, password TEXT,gold INTEGER,choosen INTEGER, listSkin TEXT)");
         MyDB.execSQL("create table match_history(username_1 TEXT , username_2 TEXT , ketqua TEXT,thoigian TEXT, lichsu TEXT)");
 
 
@@ -36,6 +36,9 @@ public class DBHelper extends SQLiteOpenHelper {
         contentValues.put("username", username);
         contentValues.put("password", password);
         contentValues.put("gold",0);
+        contentValues.put("choosen",0);
+        contentValues.put("listSkin","0");
+
 
         long result = MyDB.insert("users", null, contentValues);
         if (result == -1) return false;
@@ -81,6 +84,56 @@ public class DBHelper extends SQLiteOpenHelper {
         MyDB.close();
         return gold;
     }
+    public void  updateChoosen(String userName,int choosen)
+    {
+        SQLiteDatabase MyDB=this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("username",userName);
+        contentValues.put("choosen",choosen);
+        MyDB.update("users",contentValues,"username = ?",new String[]{userName});
+        MyDB.close();
+
+    }
+    public Integer getChoosen(String username)
+    {
+        SQLiteDatabase MyDB = this.getReadableDatabase();
+        Cursor cursor = MyDB.rawQuery("select * from users where username=?", new String[]{username});
+        Integer choosen=0;
+        if(cursor!=null && cursor.moveToFirst()) {
+            choosen = cursor.getInt(3);
+            cursor.close();
+        }
+        MyDB.close();
+        return choosen;
+    }
+    public void  updatelistSkin(String userName,int ID)
+    {
+        String list=this.getListSkin(userName);
+        list+=",";
+        list+=String.valueOf(ID);
+
+        SQLiteDatabase MyDB=this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("username",userName);
+
+        contentValues.put("listSkin",list);
+        MyDB.update("users",contentValues,"username = ?",new String[]{userName});
+        MyDB.close();
+
+    }
+    public String getListSkin(String username)
+    {
+        SQLiteDatabase MyDB = this.getReadableDatabase();
+        Cursor cursor = MyDB.rawQuery("select * from users where username=?", new String[]{username});
+        String listSKin="";
+        if(cursor!=null && cursor.moveToFirst()) {
+            listSKin = cursor.getString(4);
+            cursor.close();
+        }
+        MyDB.close();
+        return listSKin;
+    }
+
     public boolean insertMatch(String username,String username2,String ketqua,String thoigian,String lichsu)
     {
         SQLiteDatabase MyDB=this.getWritableDatabase();

@@ -325,12 +325,13 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
             if(checkWinner()){
                 if (winnerPlay==myTurn) {
                     Toast.makeText(context, "Winner"  , Toast.LENGTH_SHORT).show();
+                    openDialog(true);
 
                 }else {
                     Toast.makeText(context, "Loser" , Toast.LENGTH_SHORT).show();
+                    openDialog(false);
 
                 }
-                openDialog();
 
                 return;
             }
@@ -338,12 +339,10 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
 
         if(turnPlay==1){
             turnPlay=3-turnPlay;
-            Toast.makeText(context,"HIHI",Toast.LENGTH_SHORT).show();
 
             player2Turn();
         }else{
             turnPlay=3-turnPlay;
-            Toast.makeText(context,"Haha",Toast.LENGTH_SHORT).show();
 
             player1Turn();
         }
@@ -407,7 +406,7 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         return true;
     }
     private void EvalEnd(String st){
-        Toast.makeText(context,st,Toast.LENGTH_SHORT).show();
+
 
         switch (st){
             case "11111":
@@ -431,9 +430,17 @@ public class Fragment_Caro_with_friend extends Fragment implements FragmentCallB
         }
         return true;
     }
-    public void openDialog(){
-        DialogWinner dialogWinner=new DialogWinner();
-        dialogWinner.show(getActivity().getSupportFragmentManager(), "HIHI");
+    public void openDialog(boolean isWin){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.winner_status);
+        TextView edt = dialog.findViewById(R.id.Dialog_winner);
+        if(isWin) {
+            edt.setText( "You Win");
+        }
+        else {
+            edt.setText( "You Lose");
+        }
+        dialog.show();
     }
     public Balloon chat_p2p(String text)
     {
