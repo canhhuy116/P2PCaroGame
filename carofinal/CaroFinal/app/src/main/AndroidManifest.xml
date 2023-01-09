@@ -45,6 +45,11 @@
             android:exported="true"
             android:theme="@style/Theme.AppCompat"
 
+            />
+        <activity android:name=".MatchHistory"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat"
+
             >
         </activity>
         <activity

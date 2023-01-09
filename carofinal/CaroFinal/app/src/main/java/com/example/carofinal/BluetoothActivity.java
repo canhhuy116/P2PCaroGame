@@ -333,6 +333,11 @@ public class BluetoothActivity extends FragmentActivity implements MainCallBacks
                     mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
                     Toast.makeText(getApplicationContext(), "Connected to "
                             + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                    String gold = String.valueOf(DB.getGold(LoginActivity.user_ID));
+                    String user_id = LoginActivity.user_ID;
+                    String id_gold = "id_gold./" + gold + "./" + user_id;
+                    BluetoothActivity.this.sendMessage(id_gold);
+
                     break;
                 case MESSAGE_TOAST:
                     Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),

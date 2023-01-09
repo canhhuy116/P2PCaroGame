@@ -119,7 +119,8 @@ public class ChoiceModeActivity extends AppCompatActivity implements View.OnTouc
         MatchHistory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent intent = new Intent(    ChoiceModeActivity.this,MatchHistory.class);
+                startActivity(intent);
             }
         });
         //Shopping

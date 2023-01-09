@@ -35,6 +35,8 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     EditText edt1;
     TextView tv1;
     Button bt_send;
+    String name_player1;
+    String name_player2;
     ImageView wifi_profile_friend, btn_wifi_chat;
     DBHelper DB;
     TextView user_name_txt_wifi_player2,user_name_txt_wifi_player1;
@@ -132,6 +134,8 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
             public void onClick(View v) {
                 main.SelectEventFragmenttoMain(5);
                 myTurn=1;
+                name_player1 = user_name_txt_wifi_player1.getText().toString();
+                name_player2 = user_name_txt_wifi_player2.getText().toString();
                 init_game();
                 play_game();
                 Toast.makeText(context,"Host Innit_game",Toast.LENGTH_SHORT).show();
@@ -176,6 +180,8 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     {
         if(check){
             this.myTurn = 2;
+            name_player1 = user_name_txt_wifi_player2.getText().toString();
+            name_player2 = user_name_txt_wifi_player1.getText().toString();
             init_game();
             play_game();
             Toast.makeText(context,"Client Innit_game",Toast.LENGTH_SHORT).show();
@@ -238,10 +244,16 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         }
         else
         {
-
-            Balloon chat_tmp= chat_p2p(chat);
+            String[] check = chat.split("./");
+            if(check[0].equals("id_gold")) {
+                user_name_txt_wifi_player2.setText(check[2]);
+                player_two_won_txt_wifi_player2.setText(check[1]);
+            }
+            else {
+                Balloon chat_tmp= chat_p2p(chat);
 ////            while (true)
-            chat_tmp.showAlignBottom(wifi_profile_friend);
+                chat_tmp.showAlignBottom(wifi_profile_friend);
+            }
         }
        //else tv1.setText(chat);
     }
@@ -312,10 +324,10 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         }
     }
     private void player1Turn(){
-        tvTurn.setText("Turn of: Player 1");
+        tvTurn.setText("Turn of:" + name_player1);
     }
     private void player2Turn(){
-        tvTurn.setText("Turn of: Player 2");
+        tvTurn.setText("Turn of:" + name_player2);
     }
     private void makeMove(){
         cell[xMove][yMove].setImageDrawable(drawCell[turnPlay]);
@@ -325,15 +337,12 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
             return;
         }else{
             if(checkWinner()){
-                if (winnerPlay==myTurn) {
-                    Toast.makeText(context, "Winner"  , Toast.LENGTH_SHORT).show();
-
-                }else {
-                    Toast.makeText(context, "Loser" , Toast.LENGTH_SHORT).show();
-
+                if(winnerPlay == 1) {
+                    openDialog(name_player1);
                 }
-                openDialog();
-
+                else {
+                    openDialog(name_player2);
+                }
                 return;
             }
         }
@@ -433,9 +442,12 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         }
         return true;
     }
-    public void openDialog(){
-        DialogWinner dialogWinner=new DialogWinner();
-        dialogWinner.show(getActivity().getSupportFragmentManager(), "HIHI");
+    public void openDialog(String winner){
+        Dialog dialog = new Dialog(context);
+        dialog.setContentView(R.layout.winner_status);
+        TextView edt = dialog.findViewById(R.id.Dialog_winner);
+        edt.setText(winner+ "Win");
+        dialog.show();
     }
     public Balloon chat_p2p(String text)
     {
