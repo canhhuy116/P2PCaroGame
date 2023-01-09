@@ -2,8 +2,11 @@ package com.example.carofinal;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.drawable.Animatable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +31,10 @@ import com.skydoves.balloon.Balloon;
 import com.skydoves.balloon.BalloonAnimation;
 import com.skydoves.balloon.BalloonSizeSpec;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import pl.droidsonroids.gif.GifImageView;
 
 public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements FragmentCallBacks {
@@ -35,12 +42,14 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     EditText edt1;
     TextView tv1;
     Button bt_send;
+    ImageView backBtn;
     String name_player1;
     String name_player2;
     ImageView wifi_profile_friend, btn_wifi_chat;
     DBHelper DB;
     TextView user_name_txt_wifi_player2,user_name_txt_wifi_player1;
     TextView player_two_won_txt_wifi_player1,player_two_won_txt_wifi_player2;
+    public static String nuocdi = "";
     final static  int maxN=15;
     private ImageView[][] cell=new ImageView[maxN][maxN];
     private Context context ;
@@ -48,12 +57,14 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     private ImageView btnPlay;
     private TextView tvTurn;
     private  int winnerPlay;
+    Dialog quitDialog;
     private boolean firstMove;
     private GifImageView settingsGifView;
     LinearLayout boardGame;
     private int xMove,yMove;
     private int[][] valueCell=new int[maxN][maxN];
     private int turnPlay,myTurn=0;
+    public static String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
     public static Fragment_Caro_with_friend_Bluetooth newInstance(String Arg1)
     {
         Fragment_Caro_with_friend_Bluetooth fragment= new Fragment_Caro_with_friend_Bluetooth();
@@ -79,9 +90,11 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     public View onCreateView( LayoutInflater inflater,  ViewGroup container,  Bundle savedInstanceState) {
         LinearLayout layout_right=(LinearLayout) inflater.inflate(R.layout.caro_with_friend,null);
         boardGame=(LinearLayout) layout_right.findViewById(R.id.boardGame_wifi);
+        //quitDialog = new Dialog(context);
         //edt1=(EditText) layout_right.findViewById(R.id.edt1);
         //tv1=(TextView) layout_right.findViewById(R.id.tv1);
         //bt_send=(Button) layout_right.findViewById(R.id.send);
+        backBtn = (ImageView)  layout_right.findViewById(R.id.offline_game_back_btn_p2p);
         btnPlay=(ImageView) layout_right.findViewById(R.id.btn_play_wifi);
         tvTurn=(TextView) layout_right.findViewById(R.id.turn_player_wifi);
         settingsGifView  = (GifImageView)layout_right.findViewById(R.id.ai_game_seting_gifview_wifi);
@@ -94,7 +107,13 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
         DB=new DBHelper(context);
         player_two_won_txt_wifi_player1.setText(String.valueOf(DB.getGold(LoginActivity.user_ID)));// vàng
         user_name_txt_wifi_player1.setText(LoginActivity.user_ID);
+        backBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                quitDialogfun();
+            }
+        });
         settingsGifView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -325,13 +344,19 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
     }
     private void player1Turn(){
         tvTurn.setText("Turn of:" + name_player1);
+        nuocdi+="1"+",";
     }
     private void player2Turn(){
         tvTurn.setText("Turn of:" + name_player2);
+        nuocdi+="2"+",";
     }
     private void makeMove(){
         cell[xMove][yMove].setImageDrawable(drawCell[turnPlay]);
         valueCell[xMove][yMove]=turnPlay;
+        nuocdi += String.valueOf(xMove);
+        nuocdi += ",";
+        nuocdi += String.valueOf(yMove);
+        nuocdi += "//";
         if(noEmptyCell()){
             Toast.makeText(context,"DRAW!!!",Toast.LENGTH_SHORT).show();
             return;
@@ -339,9 +364,35 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
             if(checkWinner()){
                 if(winnerPlay == 1) {
                     openDialog(name_player1);
+
+
+                    if(name_player1.equals(user_name_txt_wifi_player2.getText().toString())) {
+                        DB.insertMatch(LoginActivity.user_ID, user_name_txt_wifi_player2.getText().toString(), "Lose", currentDate, nuocdi);
+                    }
+                    else {
+                        DB.updateGold(LoginActivity.user_ID, DB.getGold(LoginActivity.user_ID) + 4);
+                        String gold = DB.getGold(LoginActivity.user_ID).toString();
+                        String user_id = user_name_txt_wifi_player1.getText().toString();
+                        player_two_won_txt_wifi_player1.setText(gold);
+                        main.ChatFragToMain("id_gold./" + gold + "./" + user_id);
+                        DB.insertMatch(LoginActivity.user_ID, user_name_txt_wifi_player2.getText().toString(), "Win", currentDate, nuocdi);
+                    }
+
                 }
                 else {
                     openDialog(name_player2);
+                    if(name_player2.equals(user_name_txt_wifi_player2.getText().toString())) {
+                        DB.insertMatch(LoginActivity.user_ID, user_name_txt_wifi_player2.getText().toString(), "Lose", currentDate, nuocdi);
+                    }
+                    else {
+                        DB.updateGold(LoginActivity.user_ID, DB.getGold(LoginActivity.user_ID) + 4);
+                        String gold = DB.getGold(LoginActivity.user_ID).toString();
+                        String user_id = user_name_txt_wifi_player1.getText().toString();
+                        player_two_won_txt_wifi_player1.setText(gold);
+                        main.ChatFragToMain("id_gold./" + gold + "./" + user_id);
+                        DB.insertMatch(LoginActivity.user_ID, user_name_txt_wifi_player2.getText().toString(), "Win", currentDate, nuocdi);
+                    }
+
                 }
                 return;
             }
@@ -467,5 +518,34 @@ public class Fragment_Caro_with_friend_Bluetooth extends Fragment implements Fra
             .setBalloonAnimation(BalloonAnimation.ELASTIC)
             .build();
         return  tmp;
+    }
+    private void quitDialogfun() {
+
+        quitDialog= new Dialog(context);
+        quitDialog.setContentView(R.layout.quit_dialog);
+        quitDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        quitDialog.setCanceledOnTouchOutside(false);
+
+
+        Button quitBtn = quitDialog.findViewById(R.id.logoutbtn2);
+        Button continueBtn = quitDialog.findViewById(R.id.continue_btn);
+
+        quitBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                quitDialog.dismiss();
+                main.ChatFragToMain("disconnect..");
+                Intent intent = new Intent(context, ChoiceModeActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        continueBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                quitDialog.dismiss();
+            }
+        });
+        quitDialog.show();
     }
 }

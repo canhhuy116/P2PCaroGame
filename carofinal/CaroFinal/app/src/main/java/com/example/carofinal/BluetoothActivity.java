@@ -401,7 +401,14 @@ public class BluetoothActivity extends FragmentActivity implements MainCallBacks
 
     @Override
     public void ChatFragToMain(String chat) {
-        sendMessage(chat);
+        if(chat.equals("disconnect..")) {
+            mChatService.disconnect();
+//            if (mChatService != null) mChatService.stop();
+            mChatService.stop();
+        }
+        else {
+            sendMessage(chat);
+        }
     }
 
     @Override

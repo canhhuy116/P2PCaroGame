@@ -140,6 +140,12 @@ public class BluetoothChatService {
         setState(STATE_CONNECTING);
     }
 
+    public synchronized void disconnect() {
+        mAdapter.cancelDiscovery();
+//        mAdapter.disable();
+
+    }
+
     /**
      * Start the ConnectedThread to begin managing a Bluetooth connection
      * @param socket  The BluetoothSocket on which the connection was made

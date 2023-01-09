@@ -133,21 +133,20 @@
 
     </LinearLayout>
 
+
     <LinearLayout
         android:id="@+id/boardGame_wifi"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginRight="10dp"
         android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:layout_weight="6.5"
-        android:weightSum="5.5"
+        android:orientation="vertical"
         android:padding="1dp"
-        android:orientation="vertical">
-
+        android:weightSum="5.5">
 
 
     </LinearLayout>
-
 
     <View
         android:layout_width="match_parent"
