@@ -20,7 +20,7 @@
 ### Configuring the project to run locally on PC:
 
 - Install Android Studio
-- Install 
+- Install SDK
 
 
 ### Current status:
